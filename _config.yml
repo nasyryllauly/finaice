@@ -1,0 +1,29 @@
+title: "FinAice - Умное управление финансами"
+description: "AI-powered personal finance management app with modern dark theme"
+url: "https://nasyryllauly.github.io"
+baseurl: "/finaice"
+
+# Jekyll settings
+markdown: kramdown
+highlighter: rouge
+theme: minima
+
+# Include/exclude files
+include:
+  - src/
+  - manifest.json
+
+exclude:
+  - backend/
+  - docs/
+  - screenshots/
+  - README.md
+  - LICENSE
+  - CONTRIBUTING.md
+  - .gitignore
+
+# Plugins
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+
