@@ -1,279 +1,240 @@
 from flask import Blueprint, request, jsonify
-from datetime import datetime, timedelta
-from sqlalchemy import func, and_, or_
-from src.models.user import db
-from src.models.transaction import Transaction, Category, Account, Budget
+from src.models.user import db, User
+from src.models.transaction import Transaction, Category, AIInsight
+from datetime import datetime
+import random
 
 transactions_bp = Blueprint('transactions', __name__)
 
+# ИИ-сервис для анализа транзакций
+class AIService:
+    @staticmethod
+    def suggest_category(description, amount):
+        """Предложить категорию на основе описания и суммы"""
+        description_lower = description.lower() if description else ""
+        
+        # Простая логика категоризации
+        if any(word in description_lower for word in ['кафе', 'ресторан', 'еда', 'обед']):
+            return 'Еда', 0.9
+        elif any(word in description_lower for word in ['такси', 'автобус', 'метро', 'транспорт']):
+            return 'Транспорт', 0.85
+        elif any(word in description_lower for word in ['магазин', 'продукты', 'покупки']):
+            return 'Продукты', 0.8
+        elif any(word in description_lower for word in ['кино', 'театр', 'развлечения']):
+            return 'Развлечения', 0.75
+        elif any(word in description_lower for word in ['аптека', 'врач', 'лекарства']):
+            return 'Здоровье', 0.8
+        else:
+            return 'Прочее', 0.3
+    
+    @staticmethod
+    def generate_insights(user_id):
+        """Генерировать ИИ-инсайты для пользователя"""
+        user = User.query.get(user_id)
+        if not user:
+            return []
+        
+        insights = []
+        current_stats = user.get_monthly_stats()
+        
+        # Анализ трат
+        if current_stats['expense'] > 15000:
+            insights.append({
+                'type': 'warning',
+                'title': 'Высокие расходы',
+                'message': f'Ваши расходы в этом месяце составляют ₽ {current_stats["expense"]:,.0f}. Рекомендуем пересмотреть бюджет.',
+                'priority': 4
+            })
+        
+        # Позитивные инсайты
+        if current_stats['balance'] > 30000:
+            insights.append({
+                'type': 'tip',
+                'title': 'Отличная экономия!',
+                'message': f'Вы экономите ₽ {current_stats["balance"]:,.0f} в этом месяце. Продолжайте в том же духе!',
+                'priority': 2
+            })
+        
+        # Предложения по оптимизации
+        insights.append({
+            'type': 'prediction',
+            'title': 'Прогноз экономии',
+            'message': 'Сократив расходы на развлечения на 20%, вы сможете сэкономить дополнительно ₽ 3,000.',
+            'priority': 3
+        })
+        
+        return insights
+
 @transactions_bp.route('/transactions', methods=['GET'])
 def get_transactions():
-    """Получить список транзакций с фильтрацией"""
+    """Получить все транзакции пользователя"""
     user_id = request.args.get('user_id', 1, type=int)
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 20, type=int)
-    category_id = request.args.get('category_id', type=int)
-    account_id = request.args.get('account_id', type=int)
-    transaction_type = request.args.get('type')  # 'income' or 'expense'
-    start_date = request.args.get('start_date')
-    end_date = request.args.get('end_date')
-    search = request.args.get('search')
     
-    query = Transaction.query.filter_by(user_id=user_id)
-    
-    # Применяем фильтры
-    if category_id:
-        query = query.filter_by(category_id=category_id)
-    if account_id:
-        query = query.filter_by(account_id=account_id)
-    if transaction_type:
-        query = query.filter_by(type=transaction_type)
-    if start_date:
-        query = query.filter(Transaction.date >= datetime.fromisoformat(start_date))
-    if end_date:
-        query = query.filter(Transaction.date <= datetime.fromisoformat(end_date))
-    if search:
-        query = query.filter(Transaction.description.contains(search))
-    
-    # Сортировка по дате (новые сначала)
-    query = query.order_by(Transaction.date.desc())
-    
-    # Пагинация
-    transactions = query.paginate(
-        page=page, per_page=per_page, error_out=False
-    )
-    
-    return jsonify({
-        'transactions': [t.to_dict() for t in transactions.items],
-        'total': transactions.total,
-        'pages': transactions.pages,
-        'current_page': page,
-        'per_page': per_page
-    })
+    transactions = Transaction.query.filter_by(user_id=user_id).order_by(Transaction.date.desc()).all()
+    return jsonify([t.to_dict() for t in transactions])
 
 @transactions_bp.route('/transactions', methods=['POST'])
 def create_transaction():
-    """Создать новую транзакцию"""
+    """Создать новую транзакцию с ИИ-анализом"""
     data = request.get_json()
     
-    # Валидация обязательных полей
-    required_fields = ['user_id', 'account_id', 'category_id', 'amount', 'type']
-    for field in required_fields:
-        if field not in data:
-            return jsonify({'error': f'Missing required field: {field}'}), 400
+    # ИИ-анализ категории
+    suggested_category, confidence = AIService.suggest_category(
+        data.get('description', ''), 
+        data.get('amount', 0)
+    )
     
-    try:
-        transaction = Transaction(
-            user_id=data['user_id'],
-            account_id=data['account_id'],
-            category_id=data['category_id'],
-            amount=float(data['amount']),
-            description=data.get('description', ''),
-            type=data['type'],
-            date=datetime.fromisoformat(data['date']) if data.get('date') else datetime.utcnow(),
-            location=data.get('location'),
-            tags=data.get('tags'),
-            receipt_url=data.get('receipt_url'),
-            is_recurring=data.get('is_recurring', False),
-            recurring_period=data.get('recurring_period'),
-            ai_suggested=data.get('ai_suggested', False)
-        )
-        
-        db.session.add(transaction)
-        
-        # Обновляем баланс счета
-        account = Account.query.get(data['account_id'])
-        if account:
-            if data['type'] == 'income':
-                account.balance += float(data['amount'])
-            else:
-                account.balance -= float(data['amount'])
-        
-        db.session.commit()
-        
-        return jsonify({
-            'message': 'Transaction created successfully',
-            'transaction': transaction.to_dict()
-        }), 201
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': str(e)}), 500
-
-@transactions_bp.route('/transactions/<int:transaction_id>', methods=['PUT'])
-def update_transaction(transaction_id):
-    """Обновить транзакцию"""
-    transaction = Transaction.query.get_or_404(transaction_id)
-    data = request.get_json()
+    transaction = Transaction(
+        amount=data['amount'],
+        category=data.get('category', suggested_category),
+        description=data.get('description', ''),
+        type=data['type'],
+        user_id=data.get('user_id', 1),
+        ai_category_confidence=confidence,
+        ai_suggested=data.get('category') is None
+    )
     
-    try:
-        # Сохраняем старую сумму для корректировки баланса
-        old_amount = transaction.amount
-        old_type = transaction.type
-        old_account_id = transaction.account_id
-        
-        # Обновляем поля
-        for field in ['amount', 'description', 'category_id', 'account_id', 'type', 'location', 'tags']:
-            if field in data:
-                if field == 'amount':
-                    setattr(transaction, field, float(data[field]))
-                else:
-                    setattr(transaction, field, data[field])
-        
-        if 'date' in data:
-            transaction.date = datetime.fromisoformat(data['date'])
-        
-        transaction.updated_at = datetime.utcnow()
-        
-        # Корректируем баланс старого счета
-        old_account = Account.query.get(old_account_id)
-        if old_account:
-            if old_type == 'income':
-                old_account.balance -= old_amount
-            else:
-                old_account.balance += old_amount
-        
-        # Корректируем баланс нового счета
-        new_account = Account.query.get(transaction.account_id)
-        if new_account:
-            if transaction.type == 'income':
-                new_account.balance += transaction.amount
-            else:
-                new_account.balance -= transaction.amount
-        
-        db.session.commit()
-        
-        return jsonify({
-            'message': 'Transaction updated successfully',
-            'transaction': transaction.to_dict()
-        })
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': str(e)}), 500
-
-@transactions_bp.route('/transactions/<int:transaction_id>', methods=['DELETE'])
-def delete_transaction(transaction_id):
-    """Удалить транзакцию"""
-    transaction = Transaction.query.get_or_404(transaction_id)
+    db.session.add(transaction)
+    db.session.commit()
     
-    try:
-        # Корректируем баланс счета
-        account = Account.query.get(transaction.account_id)
-        if account:
-            if transaction.type == 'income':
-                account.balance -= transaction.amount
-            else:
-                account.balance += transaction.amount
-        
-        db.session.delete(transaction)
-        db.session.commit()
-        
-        return jsonify({'message': 'Transaction deleted successfully'})
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': str(e)}), 500
-
-@transactions_bp.route('/analytics/summary', methods=['GET'])
-def get_analytics_summary():
-    """Получить сводную аналитику"""
-    user_id = request.args.get('user_id', 1, type=int)
-    period = request.args.get('period', 'month')  # 'week', 'month', 'year'
-    
-    # Определяем период
-    now = datetime.utcnow()
-    if period == 'week':
-        start_date = now - timedelta(days=7)
-    elif period == 'month':
-        start_date = now - timedelta(days=30)
-    elif period == 'year':
-        start_date = now - timedelta(days=365)
-    else:
-        start_date = now - timedelta(days=30)
-    
-    # Общая статистика
-    total_income = db.session.query(func.sum(Transaction.amount)).filter(
-        and_(
-            Transaction.user_id == user_id,
-            Transaction.type == 'income',
-            Transaction.date >= start_date
-        )
-    ).scalar() or 0
-    
-    total_expenses = db.session.query(func.sum(Transaction.amount)).filter(
-        and_(
-            Transaction.user_id == user_id,
-            Transaction.type == 'expense',
-            Transaction.date >= start_date
-        )
-    ).scalar() or 0
-    
-    # Расходы по категориям
-    expenses_by_category = db.session.query(
-        Category.name,
-        Category.color,
-        func.sum(Transaction.amount).label('total')
-    ).join(Transaction).filter(
-        and_(
-            Transaction.user_id == user_id,
-            Transaction.type == 'expense',
-            Transaction.date >= start_date
-        )
-    ).group_by(Category.id).all()
-    
-    # Топ категории
-    top_categories = [
-        {
-            'name': cat.name,
-            'color': cat.color,
-            'amount': float(cat.total),
-            'percentage': round((float(cat.total) / total_expenses * 100) if total_expenses > 0 else 0, 1)
-        }
-        for cat in expenses_by_category
-    ]
-    
-    # Баланс счетов
-    accounts_balance = db.session.query(func.sum(Account.balance)).filter(
-        and_(
-            Account.user_id == user_id,
-            Account.is_active == True
-        )
-    ).scalar() or 0
-    
-    return jsonify({
-        'period': period,
-        'total_income': float(total_income),
-        'total_expenses': float(total_expenses),
-        'net_income': float(total_income - total_expenses),
-        'accounts_balance': float(accounts_balance),
-        'expenses_by_category': top_categories,
-        'average_daily_expense': float(total_expenses / 30) if period == 'month' else float(total_expenses / 7),
-        'transactions_count': Transaction.query.filter(
-            and_(
-                Transaction.user_id == user_id,
-                Transaction.date >= start_date
-            )
-        ).count()
-    })
+    return jsonify(transaction.to_dict()), 201
 
 @transactions_bp.route('/categories', methods=['GET'])
 def get_categories():
-    """Получить список категорий"""
-    transaction_type = request.args.get('type')  # 'income' or 'expense'
-    
-    query = Category.query
-    if transaction_type:
-        query = query.filter_by(type=transaction_type)
-    
-    categories = query.all()
-    return jsonify([cat.to_dict() for cat in categories])
+    """Получить все категории"""
+    categories = Category.query.all()
+    return jsonify([c.to_dict() for c in categories])
 
-@transactions_bp.route('/accounts', methods=['GET'])
-def get_accounts():
-    """Получить список счетов пользователя"""
+@transactions_bp.route('/analytics/summary', methods=['GET'])
+def get_analytics_summary():
+    """Получить аналитическую сводку"""
+    user_id = request.args.get('user_id', 1, type=int)
+    user = User.query.get(user_id)
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    # Статистика за текущий месяц
+    monthly_stats = user.get_monthly_stats()
+    
+    # Анализ по категориям
+    transactions = Transaction.query.filter_by(user_id=user_id, type='expense').all()
+    category_stats = {}
+    
+    for transaction in transactions:
+        category = transaction.category
+        if category not in category_stats:
+            category_stats[category] = 0
+        category_stats[category] += transaction.amount
+    
+    # Сортировка по сумме
+    sorted_categories = sorted(category_stats.items(), key=lambda x: x[1], reverse=True)
+    
+    return jsonify({
+        'monthly_stats': monthly_stats,
+        'balance': user.get_balance(),
+        'category_breakdown': sorted_categories[:5],  # Топ 5 категорий
+        'total_transactions': len(user.transactions)
+    })
+
+@transactions_bp.route('/ai/insights', methods=['GET'])
+def get_ai_insights():
+    """Получить ИИ-инсайты"""
     user_id = request.args.get('user_id', 1, type=int)
     
-    accounts = Account.query.filter_by(user_id=user_id, is_active=True).all()
-    return jsonify([acc.to_dict() for acc in accounts])
+    # Получить существующие инсайты
+    existing_insights = AIInsight.query.filter_by(user_id=user_id).order_by(AIInsight.created_at.desc()).limit(5).all()
+    
+    # Если инсайтов мало, генерируем новые
+    if len(existing_insights) < 3:
+        new_insights = AIService.generate_insights(user_id)
+        
+        for insight_data in new_insights:
+            insight = AIInsight(
+                user_id=user_id,
+                insight_type=insight_data['type'],
+                title=insight_data['title'],
+                message=insight_data['message'],
+                priority=insight_data['priority']
+            )
+            db.session.add(insight)
+        
+        db.session.commit()
+        existing_insights = AIInsight.query.filter_by(user_id=user_id).order_by(AIInsight.created_at.desc()).limit(5).all()
+    
+    return jsonify([i.to_dict() for i in existing_insights])
+
+@transactions_bp.route('/ai/chat', methods=['POST'])
+def ai_chat():
+    """ИИ-чат для финансовых вопросов"""
+    data = request.get_json()
+    user_message = data.get('message', '').lower()
+    user_id = data.get('user_id', 1)
+    
+    # Простые ответы ИИ
+    responses = {
+        'анализ': 'Анализирую ваши расходы... Рекомендую обратить внимание на категорию "Развлечения" - здесь есть потенциал для экономии.',
+        'прогноз': 'На основе ваших трат, в следующем месяце вы можете сэкономить до ₽ 5,000, сократив необязательные расходы.',
+        'совет': 'Рекомендую использовать правило 50/30/20: 50% на необходимые расходы, 30% на желания, 20% на сбережения.',
+        'бюджет': 'Ваш текущий бюджет выглядит сбалансированно. Основные траты идут на продукты и транспорт.',
+        'экономия': 'Для экономии рекомендую: 1) Готовить дома чаще 2) Использовать общественный транспорт 3) Планировать покупки заранее'
+    }
+    
+    # Поиск подходящего ответа
+    response = "Извините, я не понял ваш вопрос. Попробуйте спросить об анализе трат, прогнозе или советах по экономии."
+    
+    for keyword, answer in responses.items():
+        if keyword in user_message:
+            response = answer
+            break
+    
+    return jsonify({
+        'response': response,
+        'timestamp': datetime.utcnow().isoformat()
+    })
+
+# Инициализация базовых категорий
+@transactions_bp.route('/init-data', methods=['POST'])
+def init_data():
+    """Инициализировать базовые данные"""
+    # Создать базовые категории
+    default_categories = [
+        {'name': 'Продукты', 'icon': '🛒', 'color': 'bg-blue-500', 'type': 'expense'},
+        {'name': 'Транспорт', 'icon': '🚇', 'color': 'bg-purple-500', 'type': 'expense'},
+        {'name': 'Еда', 'icon': '🍽️', 'color': 'bg-green-500', 'type': 'expense'},
+        {'name': 'Развлечения', 'icon': '🎬', 'color': 'bg-red-500', 'type': 'expense'},
+        {'name': 'Здоровье', 'icon': '💊', 'color': 'bg-pink-500', 'type': 'expense'},
+        {'name': 'Образование', 'icon': '📚', 'color': 'bg-indigo-500', 'type': 'expense'},
+        {'name': 'Кошелёк', 'icon': '💳', 'color': 'bg-orange-500', 'type': 'expense'},
+        {'name': 'Зарплата', 'icon': '💰', 'color': 'bg-green-500', 'type': 'income'},
+    ]
+    
+    for cat_data in default_categories:
+        existing = Category.query.filter_by(name=cat_data['name']).first()
+        if not existing:
+            category = Category(**cat_data)
+            db.session.add(category)
+    
+    # Создать тестового пользователя
+    existing_user = User.query.filter_by(username='demo').first()
+    if not existing_user:
+        user = User(username='demo', email='demo@budgetok.ai')
+        db.session.add(user)
+        db.session.commit()
+        
+        # Добавить тестовые транзакции
+        test_transactions = [
+            {'amount': 45000, 'category': 'Зарплата', 'description': 'Зарплата за март', 'type': 'income'},
+            {'amount': 850, 'category': 'Продукты', 'description': 'Покупки в магазине', 'type': 'expense'},
+            {'amount': 600, 'category': 'Транспорт', 'description': 'Проезд на такси', 'type': 'expense'},
+            {'amount': 11200, 'category': 'Кошелёк', 'description': 'Покупка одежды', 'type': 'expense'},
+            {'amount': 320, 'category': 'Еда', 'description': 'Обед в кафе', 'type': 'expense'},
+        ]
+        
+        for trans_data in test_transactions:
+            transaction = Transaction(user_id=user.id, **trans_data)
+            db.session.add(transaction)
+    
+    db.session.commit()
+    return jsonify({'message': 'Data initialized successfully'})
 
