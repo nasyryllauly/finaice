@@ -3,47 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinAIce - Умное управление финансами с ИИ</title>
-    <meta name="description" content="FinAIce - современное приложение для управления финансами с ИИ в стиле Budget OK">
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- React и ReactDOM -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- Babel для JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    
-    <!-- Recharts для диаграмм -->
-    <script src="https://unpkg.com/recharts@2.8.0/umd/Recharts.js"></script>
-    
+    <title>FinAIce - Умное управление финансами</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            background-color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+            overflow-x: hidden;
         }
-        
-        .budget-ok-red {
-            color: #FF4757;
-        }
-        
-        .bg-budget-ok-red {
-            background-color: #FF4757;
-        }
-        
-        .mobile-container {
-            max-width: 375px;
+
+        .app-container {
+            max-width: 400px;
             margin: 0 auto;
-            min-height: 100vh;
             background: white;
+            min-height: 100vh;
+            position: relative;
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
         }
-        
+
+        .screen {
+            display: none;
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .balance {
+            font-size: 36px;
+            font-weight: bold;
+            color: #333;
+            margin: 10px 0;
+        }
+
+        .ai-insight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .ai-insight i {
+            margin-right: 8px;
+        }
+
+        .transaction-list {
+            margin-top: 20px;
+        }
+
+        .transaction-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .transaction-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: white;
+            font-size: 18px;
+        }
+
+        .transaction-icon.food { background: #ff6b6b; }
+        .transaction-icon.transport { background: #4ecdc4; }
+        .transaction-icon.shopping { background: #45b7d1; }
+        .transaction-icon.entertainment { background: #96ceb4; }
+
+        .transaction-details {
+            flex: 1;
+        }
+
+        .transaction-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .transaction-date {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .transaction-amount {
+            font-weight: bold;
+            color: #ff4757;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .category-item {
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .category-item:hover {
+            transform: scale(1.05);
+        }
+
         .category-icon {
             width: 60px;
             height: 60px;
@@ -51,339 +134,689 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            margin: 0 auto 10px;
             color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .category-icon.food { background: #ff6b6b; }
+        .category-icon.transport { background: #4ecdc4; }
+        .category-icon.shopping { background: #45b7d1; }
+        .category-icon.entertainment { background: #96ceb4; }
+        .category-icon.health { background: #f7b731; }
+        .category-icon.education { background: #5f27cd; }
+
+        .category-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .amount-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin: 10px 0;
+        }
+
+        .ai-suggestion {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border-left: 4px solid #2196f3;
+        }
+
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+
+        .chat-message {
+            margin: 15px 0;
+            padding: 12px 16px;
+            border-radius: 18px;
+            max-width: 80%;
+        }
+
+        .chat-message.ai {
+            background: #e3f2fd;
+            margin-right: auto;
+        }
+
+        .chat-message.user {
+            background: #ff4757;
+            color: white;
+            margin-left: auto;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .quick-action {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .quick-action:hover {
+            background: #e9ecef;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .chart-placeholder {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: conic-gradient(
+                #ff6b6b 0deg 120deg,
+                #4ecdc4 120deg 200deg,
+                #45b7d1 200deg 280deg,
+                #96ceb4 280deg 360deg
+            );
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .chart-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-weight: bold;
         }
-        
-        .nav-tab {
-            flex: 1;
-            padding: 12px 8px;
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
             text-align: center;
-            border: none;
-            background: none;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff4757;
+        }
+
+        .stat-label {
             color: #666;
-            font-size: 12px;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             cursor: pointer;
             transition: color 0.2s;
+            color: #666;
         }
-        
-        .nav-tab.active {
-            color: #FF4757;
+
+        .nav-item.active {
+            color: #ff4757;
         }
-        
-        .nav-tab:hover {
-            color: #FF4757;
+
+        .nav-item i {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .nav-item span {
+            font-size: 12px;
+        }
+
+        .add-button {
+            width: 56px;
+            height: 56px;
+            background: #ff4757;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            position: relative;
+            top: -10px;
+            box-shadow: 0 4px 12px rgba(255, 71, 87, 0.3);
+        }
+
+        .settings-list {
+            margin: 20px 0;
+        }
+
+        .settings-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+        }
+
+        .settings-icon {
+            width: 40px;
+            height: 40px;
+            background: #f8f9fa;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: #666;
+        }
+
+        .settings-text {
+            flex: 1;
+        }
+
+        .settings-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .settings-subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            margin: 10px 0;
+            transition: border-color 0.2s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #ff4757;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #ff3742;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .page-subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 480px) {
+            .app-container {
+                max-width: 100%;
+            }
+            
+            .bottom-nav {
+                max-width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-    <div id="root"></div>
+    <div class="app-container">
+        <!-- Главный экран -->
+        <div class="screen active" id="home-screen">
+            <div class="header">
+                <h1>FinAIce</h1>
+                <div class="balance">₽ 32,030</div>
+                <p style="color: #666;">Общий баланс</p>
+            </div>
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-        const { PieChart, Pie, Cell, ResponsiveContainer } = Recharts;
+            <div class="ai-insight">
+                <i class="fas fa-brain"></i>
+                ИИ совет: Вы экономите на 15% больше этого месяца!
+            </div>
 
-        // Компонент главного экрана
-        const HomeScreen = () => {
-            const [balance] = useState(32030);
-            const [transactions] = useState([
-                { id: 1, category: 'Еда', amount: 320, description: 'Обед в кафе', type: 'expense', color: 'bg-green-500', icon: '🍽️' },
-                { id: 2, category: 'Транспорт', amount: 600, description: 'Проезд на такси', type: 'expense', color: 'bg-purple-500', icon: '🚇' },
-                { id: 3, category: 'Кошелёк', amount: 11200, description: 'Покупка одежды', type: 'expense', color: 'bg-orange-500', icon: '💳' },
-                { id: 4, category: 'Продукты', amount: 850, description: 'Покупки в магазине', type: 'expense', color: 'bg-blue-500', icon: '🛒' },
-                { id: 5, category: 'Зарплата', amount: 45000, description: 'Зарплата за март', type: 'income', color: 'bg-green-500', icon: '💰' }
-            ]);
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">₽ 8,500</div>
+                    <div class="stat-label">Доходы</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">₽ 5,200</div>
+                    <div class="stat-label">Расходы</div>
+                </div>
+            </div>
 
-            return (
-                <div className="p-4 space-y-6">
-                    {/* Баланс */}
-                    <div className="text-center">
-                        <div className="text-3xl font-bold budget-ok-red mb-2">
-                            ₽ {balance.toLocaleString()}
-                        </div>
-                        <div className="text-gray-500">Общий баланс</div>
+            <div class="transaction-list">
+                <h3 style="margin-bottom: 15px;">Последние транзакции</h3>
+                
+                <div class="transaction-item">
+                    <div class="transaction-icon food">
+                        <i class="fas fa-utensils"></i>
                     </div>
-
-                    {/* ИИ совет */}
-                    <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-xl">
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="text-lg">🧠</span>
-                            <span className="font-medium">ИИ совет:</span>
-                        </div>
-                        <div className="text-sm">Сократив расходы на развлечения на 20%, вы сможете сэкономить дополнительно ₽ 3,000.</div>
+                    <div class="transaction-details">
+                        <div class="transaction-title">Обед в кафе</div>
+                        <div class="transaction-date">Сегодня, 14:30</div>
                     </div>
+                    <div class="transaction-amount">-₽ 850</div>
+                </div>
 
-                    {/* Список транзакций */}
-                    <div className="space-y-3">
-                        {transactions.map((transaction) => (
-                            <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                <div className="flex items-center gap-3">
-                                    <div className={`category-icon ${transaction.color}`}>
-                                        {transaction.icon}
-                                    </div>
-                                    <div>
-                                        <div className="font-medium">{transaction.category}</div>
-                                        <div className="text-sm text-gray-500">{transaction.description}</div>
-                                    </div>
-                                </div>
-                                <div className={`font-bold ${transaction.type === 'income' ? 'text-green-500' : 'text-red-500'}`}>
-                                    {transaction.type === 'income' ? '+' : ''}₽ {transaction.amount.toLocaleString()}
-                                </div>
-                            </div>
-                        ))}
+                <div class="transaction-item">
+                    <div class="transaction-icon transport">
+                        <i class="fas fa-bus"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="transaction-title">Проезд</div>
+                        <div class="transaction-date">Сегодня, 09:15</div>
+                    </div>
+                    <div class="transaction-amount">-₽ 120</div>
+                </div>
+
+                <div class="transaction-item">
+                    <div class="transaction-icon shopping">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <div class="transaction-details">
+                        <div class="transaction-title">Продукты</div>
+                        <div class="transaction-date">Вчера, 18:45</div>
+                    </div>
+                    <div class="transaction-amount">-₽ 2,340</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Экран добавления -->
+        <div class="screen" id="add-screen">
+            <div class="page-title">Просто</div>
+            <div class="page-subtitle">Потянуть монетку и указать сумму</div>
+
+            <div class="amount-display" id="amount-display">₽ 0</div>
+
+            <div class="category-grid">
+                <div class="category-item" onclick="selectCategory('food', 850)">
+                    <div class="category-icon food">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                    <div class="category-label">Еда</div>
+                </div>
+
+                <div class="category-item" onclick="selectCategory('transport', 120)">
+                    <div class="category-icon transport">
+                        <i class="fas fa-bus"></i>
+                    </div>
+                    <div class="category-label">Транспорт</div>
+                </div>
+
+                <div class="category-item" onclick="selectCategory('shopping', 2340)">
+                    <div class="category-icon shopping">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <div class="category-label">Покупки</div>
+                </div>
+
+                <div class="category-item" onclick="selectCategory('entertainment', 1200)">
+                    <div class="category-icon entertainment">
+                        <i class="fas fa-gamepad"></i>
+                    </div>
+                    <div class="category-label">Развлечения</div>
+                </div>
+
+                <div class="category-item" onclick="selectCategory('health', 800)">
+                    <div class="category-icon health">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <div class="category-label">Здоровье</div>
+                </div>
+
+                <div class="category-item" onclick="selectCategory('education', 1500)">
+                    <div class="category-icon education">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="category-label">Образование</div>
+                </div>
+            </div>
+
+            <div class="ai-suggestion">
+                <i class="fas fa-brain"></i>
+                ИИ предлагает: Кафе (на основе геолокации)
+            </div>
+
+            <input type="text" class="input-field" placeholder="Описание транзакции" id="transaction-description">
+            <button class="btn" onclick="addTransaction()">Добавить транзакцию</button>
+        </div>
+
+        <!-- Экран аналитики -->
+        <div class="screen" id="analytics-screen">
+            <div class="page-title">Аналитика</div>
+
+            <div class="chart-container">
+                <h3 style="margin-bottom: 20px;">Расходы по категориям</h3>
+                <div class="chart-placeholder">
+                    <div class="chart-center">
+                        ₽ 5,200<br>
+                        <small>Всего</small>
                     </div>
                 </div>
-            );
-        };
+            </div>
 
-        // Компонент экрана добавления
-        const AddScreen = () => {
-            const categories = [
-                { name: 'Кошелёк', amount: '₽ 5,000', color: 'bg-orange-500', icon: '💳' },
-                { name: 'Транспорт', amount: '₽ 1,200', color: 'bg-purple-500', icon: '🚇' },
-                { name: 'Продукты', amount: '₽ 3,400', color: 'bg-blue-500', icon: '🛒' },
-                { name: 'Еда', amount: '₽ 2,100', color: 'bg-green-500', icon: '🍽️' },
-                { name: 'Развлечения', amount: '₽ 800', color: 'bg-red-500', icon: '🎬' },
-                { name: 'Здоровье', amount: '₽ 1,500', color: 'bg-pink-500', icon: '💊' }
-            ];
-
-            return (
-                <div className="p-4 space-y-6">
-                    <div className="text-center">
-                        <h2 className="text-2xl font-bold mb-2">Просто</h2>
-                        <p className="text-gray-500">Потянуть монетку и указать сумму</p>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4">
-                        {categories.map((category, index) => (
-                            <div key={index} className="text-center">
-                                <div className={`category-icon ${category.color} mx-auto mb-2 cursor-pointer hover:scale-105 transition-transform`}>
-                                    {category.icon}
-                                </div>
-                                <div className="text-sm font-medium">{category.name}</div>
-                                <div className="text-xs text-gray-500">{category.amount}</div>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="bg-blue-50 p-4 rounded-xl">
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="text-lg">🧠</span>
-                            <span className="font-medium text-blue-700">ИИ предлагает:</span>
-                        </div>
-                        <div className="text-sm text-blue-600">Кафе (на основе геолокации)</div>
-                    </div>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">₽ 2,100</div>
+                    <div class="stat-label">Еда</div>
                 </div>
-            );
-        };
-
-        // Компонент аналитики
-        const AnalyticsScreen = () => {
-            const data = [
-                { name: 'Еда', value: 8500, color: '#10B981' },
-                { name: 'Транспорт', value: 3200, color: '#8B5CF6' },
-                { name: 'Развлечения', value: 2800, color: '#EF4444' },
-                { name: 'Продукты', value: 4500, color: '#3B82F6' },
-                { name: 'Здоровье', value: 1800, color: '#EC4899' }
-            ];
-
-            return (
-                <div className="p-4 space-y-6">
-                    <div className="text-center">
-                        <h2 className="text-2xl font-bold mb-2">Аналитика</h2>
-                        <p className="text-gray-500">Ваши расходы за месяц</p>
-                    </div>
-
-                    <div className="bg-gray-50 p-4 rounded-xl">
-                        <div className="h-64">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                    <Pie
-                                        data={data}
-                                        cx="50%"
-                                        cy="50%"
-                                        innerRadius={60}
-                                        outerRadius={100}
-                                        paddingAngle={5}
-                                        dataKey="value"
-                                    >
-                                        {data.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.color} />
-                                        ))}
-                                    </Pie>
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
-
-                    <div className="space-y-3">
-                        {data.map((item, index) => (
-                            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-4 h-4 rounded-full" style={{backgroundColor: item.color}}></div>
-                                    <span className="font-medium">{item.name}</span>
-                                </div>
-                                <span className="font-bold text-red-500">₽ {item.value.toLocaleString()}</span>
-                            </div>
-                        ))}
-                    </div>
+                <div class="stat-item">
+                    <div class="stat-value">₽ 1,200</div>
+                    <div class="stat-label">Транспорт</div>
                 </div>
-            );
-        };
-
-        // Компонент ИИ-ассистента
-        const AIScreen = () => {
-            const [messages] = useState([
-                { id: 1, text: 'Анализирую ваши расходы за месяц...', sender: 'ai' },
-                { id: 2, text: 'Рекомендую сократить траты на развлечения на 20%', sender: 'ai' },
-                { id: 3, text: 'Вы можете сэкономить ₽ 3,000 в следующем месяце', sender: 'ai' }
-            ]);
-
-            const quickActions = [
-                'Анализ трат',
-                'Прогноз бюджета',
-                'Советы по экономии'
-            ];
-
-            return (
-                <div className="p-4 space-y-6">
-                    <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 rounded-xl">
-                        <h2 className="text-xl font-bold">ИИ Ассистент</h2>
-                        <p className="text-sm opacity-90">Ваш персональный финансовый советник</p>
-                    </div>
-
-                    <div className="space-y-3">
-                        {messages.map((message) => (
-                            <div key={message.id} className="bg-blue-50 p-3 rounded-lg">
-                                <div className="flex items-start gap-2">
-                                    <span className="text-lg">🤖</span>
-                                    <div className="text-sm text-blue-800">{message.text}</div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="space-y-2">
-                        <p className="text-sm font-medium text-gray-700">Быстрые действия:</p>
-                        <div className="grid grid-cols-1 gap-2">
-                            {quickActions.map((action, index) => (
-                                <button key={index} className="p-3 bg-gray-100 rounded-lg text-left text-sm hover:bg-gray-200 transition-colors">
-                                    {action}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                        <input 
-                            type="text" 
-                            placeholder="Спросите ИИ о финансах..." 
-                            className="w-full bg-transparent border-none outline-none text-sm"
-                        />
-                    </div>
+                <div class="stat-item">
+                    <div class="stat-value">₽ 1,500</div>
+                    <div class="stat-label">Покупки</div>
                 </div>
-            );
-        };
-
-        // Компонент настроек
-        const SettingsScreen = () => {
-            const settings = [
-                { icon: '👤', title: 'Профиль', description: 'Личная информация' },
-                { icon: '🔔', title: 'Уведомления', description: 'Настройки оповещений' },
-                { icon: '🔒', title: 'Безопасность', description: 'Пароль и защита' },
-                { icon: '❓', title: 'Помощь', description: 'FAQ и поддержка' }
-            ];
-
-            return (
-                <div className="p-4 space-y-6">
-                    <div className="text-center">
-                        <h2 className="text-2xl font-bold mb-2">Настройки</h2>
-                        <p className="text-gray-500">Управление приложением</p>
-                    </div>
-
-                    <div className="space-y-3">
-                        {settings.map((setting, index) => (
-                            <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
-                                <span className="text-2xl">{setting.icon}</span>
-                                <div>
-                                    <div className="font-medium">{setting.title}</div>
-                                    <div className="text-sm text-gray-500">{setting.description}</div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                <div class="stat-item">
+                    <div class="stat-value">₽ 400</div>
+                    <div class="stat-label">Развлечения</div>
                 </div>
-            );
-        };
+            </div>
 
-        // Главный компонент приложения
-        const App = () => {
-            const [activeTab, setActiveTab] = useState('home');
+            <div class="ai-insight">
+                <i class="fas fa-chart-line"></i>
+                Ваши расходы на еду выросли на 12% по сравнению с прошлым месяцем
+            </div>
+        </div>
 
-            const renderScreen = () => {
-                switch(activeTab) {
-                    case 'home': return <HomeScreen />;
-                    case 'add': return <AddScreen />;
-                    case 'analytics': return <AnalyticsScreen />;
-                    case 'ai': return <AIScreen />;
-                    case 'settings': return <SettingsScreen />;
-                    default: return <HomeScreen />;
-                }
-            };
+        <!-- Экран ИИ-ассистента -->
+        <div class="screen" id="ai-screen">
+            <div class="page-title">ИИ Ассистент</div>
 
-            return (
-                <div className="mobile-container">
-                    {/* Контент */}
-                    <div className="pb-16">
-                        {renderScreen()}
-                    </div>
-
-                    {/* Нижняя навигация */}
-                    <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-[375px] bg-white border-t border-gray-200">
-                        <div className="flex">
-                            <button 
-                                className={`nav-tab ${activeTab === 'home' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('home')}
-                            >
-                                <div className="text-lg mb-1">🏠</div>
-                                <div>Главная</div>
-                            </button>
-                            <button 
-                                className={`nav-tab ${activeTab === 'analytics' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('analytics')}
-                            >
-                                <div className="text-lg mb-1">📊</div>
-                                <div>Анализ</div>
-                            </button>
-                            <button 
-                                className={`nav-tab ${activeTab === 'add' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('add')}
-                            >
-                                <div className="w-12 h-12 bg-budget-ok-red rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-1">+</div>
-                            </button>
-                            <button 
-                                className={`nav-tab ${activeTab === 'ai' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('ai')}
-                            >
-                                <div className="text-lg mb-1">🧠</div>
-                                <div>ИИ</div>
-                            </button>
-                            <button 
-                                className={`nav-tab ${activeTab === 'settings' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('settings')}
-                            >
-                                <div className="text-lg mb-1">⚙️</div>
-                                <div>Еще</div>
-                            </button>
-                        </div>
-                    </div>
+            <div class="chat-container" id="chat-container">
+                <div class="chat-message ai">
+                    Привет! Я ваш финансовый ИИ-ассистент. Анализирую ваши расходы за месяц...
                 </div>
-            );
-        };
+                <div class="chat-message ai">
+                    Рекомендую сократить траты на развлечения на 20%
+                </div>
+                <div class="chat-message ai">
+                    Вы можете сэкономить ₽ 3,000 в следующем месяце
+                </div>
+            </div>
 
-        // Рендер приложения
-        ReactDOM.render(<App />, document.getElementById('root'));
+            <div class="quick-actions">
+                <div class="quick-action" onclick="askAI('Анализ трат')">
+                    <i class="fas fa-chart-pie"></i><br>
+                    Анализ трат
+                </div>
+                <div class="quick-action" onclick="askAI('Прогноз бюджета')">
+                    <i class="fas fa-crystal-ball"></i><br>
+                    Прогноз бюджета
+                </div>
+                <div class="quick-action" onclick="askAI('Советы по экономии')">
+                    <i class="fas fa-lightbulb"></i><br>
+                    Советы по экономии
+                </div>
+                <div class="quick-action" onclick="askAI('Планирование целей')">
+                    <i class="fas fa-target"></i><br>
+                    Планирование целей
+                </div>
+            </div>
+
+            <input type="text" class="input-field" placeholder="Спросите ИИ о финансах..." id="ai-input">
+            <button class="btn" onclick="sendAIMessage()">Отправить</button>
+        </div>
+
+        <!-- Экран настроек -->
+        <div class="screen" id="settings-screen">
+            <div class="page-title">Настройки</div>
+
+            <div class="settings-list">
+                <div class="settings-item">
+                    <div class="settings-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="settings-text">
+                        <div class="settings-title">Профиль</div>
+                        <div class="settings-subtitle">Управление аккаунтом</div>
+                    </div>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+
+                <div class="settings-item">
+                    <div class="settings-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="settings-text">
+                        <div class="settings-title">Уведомления</div>
+                        <div class="settings-subtitle">Настройка оповещений</div>
+                    </div>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+
+                <div class="settings-item">
+                    <div class="settings-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="settings-text">
+                        <div class="settings-title">Безопасность</div>
+                        <div class="settings-subtitle">Защита данных</div>
+                    </div>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+
+                <div class="settings-item">
+                    <div class="settings-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="settings-text">
+                        <div class="settings-title">ИИ Настройки</div>
+                        <div class="settings-subtitle">Персонализация ИИ</div>
+                    </div>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+
+                <div class="settings-item">
+                    <div class="settings-icon">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                    <div class="settings-text">
+                        <div class="settings-title">Помощь</div>
+                        <div class="settings-subtitle">FAQ и поддержка</div>
+                    </div>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Нижняя навигация -->
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="showScreen('home')">
+                <i class="fas fa-home"></i>
+                <span>Главная</span>
+            </div>
+            <div class="nav-item" onclick="showScreen('analytics')">
+                <i class="fas fa-chart-pie"></i>
+                <span>Аналитика</span>
+            </div>
+            <div class="nav-item" onclick="showScreen('add')">
+                <div class="add-button">
+                    <i class="fas fa-plus"></i>
+                </div>
+            </div>
+            <div class="nav-item" onclick="showScreen('ai')">
+                <i class="fas fa-brain"></i>
+                <span>ИИ</span>
+            </div>
+            <div class="nav-item" onclick="showScreen('settings')">
+                <i class="fas fa-cog"></i>
+                <span>Настройки</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentAmount = 0;
+        let selectedCategory = null;
+
+        function showScreen(screenName) {
+            // Скрыть все экраны
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+
+            // Убрать активный класс с навигации
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Показать выбранный экран
+            document.getElementById(screenName + '-screen').classList.add('active');
+
+            // Активировать соответствующий элемент навигации
+            event.target.closest('.nav-item').classList.add('active');
+        }
+
+        function selectCategory(category, amount) {
+            selectedCategory = category;
+            currentAmount = amount;
+            document.getElementById('amount-display').textContent = `₽ ${amount.toLocaleString()}`;
+            
+            // Анимация выбора
+            document.querySelectorAll('.category-item').forEach(item => {
+                item.style.opacity = '0.5';
+            });
+            event.target.closest('.category-item').style.opacity = '1';
+            event.target.closest('.category-item').style.transform = 'scale(1.1)';
+        }
+
+        function addTransaction() {
+            const description = document.getElementById('transaction-description').value;
+            if (selectedCategory && currentAmount > 0) {
+                alert(`Транзакция добавлена: ${description || selectedCategory} - ₽${currentAmount}`);
+                
+                // Сброс формы
+                currentAmount = 0;
+                selectedCategory = null;
+                document.getElementById('amount-display').textContent = '₽ 0';
+                document.getElementById('transaction-description').value = '';
+                
+                // Сброс стилей категорий
+                document.querySelectorAll('.category-item').forEach(item => {
+                    item.style.opacity = '1';
+                    item.style.transform = 'scale(1)';
+                });
+                
+                // Переход на главный экран
+                showScreen('home');
+            } else {
+                alert('Выберите категорию и сумму');
+            }
+        }
+
+        function askAI(question) {
+            const chatContainer = document.getElementById('chat-container');
+            
+            // Добавить вопрос пользователя
+            const userMessage = document.createElement('div');
+            userMessage.className = 'chat-message user';
+            userMessage.textContent = question;
+            chatContainer.appendChild(userMessage);
+
+            // Добавить ответ ИИ
+            setTimeout(() => {
+                const aiMessage = document.createElement('div');
+                aiMessage.className = 'chat-message ai';
+                
+                const responses = {
+                    'Анализ трат': 'Ваши основные расходы: Еда 40%, Транспорт 23%, Покупки 29%, Развлечения 8%',
+                    'Прогноз бюджета': 'На основе текущих трат, в следующем месяце ожидается расход ₽4,800',
+                    'Советы по экономии': 'Рекомендую готовить дома чаще - это сэкономит до ₽1,500 в месяц',
+                    'Планирование целей': 'Для достижения цели в ₽50,000 откладывайте ₽4,200 ежемесячно'
+                };
+                
+                aiMessage.textContent = responses[question] || 'Анализирую ваш запрос...';
+                chatContainer.appendChild(aiMessage);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }, 1000);
+        }
+
+        function sendAIMessage() {
+            const input = document.getElementById('ai-input');
+            const message = input.value.trim();
+            
+            if (message) {
+                askAI(message);
+                input.value = '';
+            }
+        }
+
+        // Обработка Enter в поле ввода ИИ
+        document.getElementById('ai-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendAIMessage();
+            }
+        });
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('FinAIce загружен успешно!');
+        });
     </script>
 </body>
 </html>
