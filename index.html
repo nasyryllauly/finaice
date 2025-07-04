@@ -3,323 +3,388 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinAice - Умное управление финансами</title>
-    <link rel="stylesheet" href="src/css/main.css">
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0A0A0A">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="src/assets/icon-192.png">
+    <title>FinAIce - Умное управление финансами с ИИ</title>
+    <meta name="description" content="FinAIce - современное приложение для управления финансами с ИИ в стиле Budget OK">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React и ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel для JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <!-- Recharts для диаграмм -->
+    <script src="https://unpkg.com/recharts@2.8.0/umd/Recharts.js"></script>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background-color: #ffffff;
+        }
+        
+        .budget-ok-red {
+            color: #FF4757;
+        }
+        
+        .bg-budget-ok-red {
+            background-color: #FF4757;
+        }
+        
+        .mobile-container {
+            max-width: 375px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        .category-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .nav-tab {
+            flex: 1;
+            padding: 12px 8px;
+            text-align: center;
+            border: none;
+            background: none;
+            color: #666;
+            font-size: 12px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        
+        .nav-tab.active {
+            color: #FF4757;
+        }
+        
+        .nav-tab:hover {
+            color: #FF4757;
+        }
+    </style>
 </head>
 <body>
-    <div id="app">
-        <!-- Заголовок приложения -->
-        <header class="app-header">
-            <div class="header-content">
-                <h1 class="app-title">FinAice</h1>
-                <div class="header-actions">
-                    <button class="profile-btn" id="profileBtn">
-                        <div class="profile-avatar">👤</div>
-                    </button>
-                </div>
-            </div>
-        </header>
+    <div id="root"></div>
 
-        <!-- Основной контент -->
-        <main class="main-content">
-            <!-- Экран главной страницы -->
-            <div id="homeScreen" class="screen active">
-                <!-- Общий баланс -->
-                <div class="balance-card">
-                    <div class="balance-header">
-                        <span class="balance-label">Общий баланс</span>
-                        <button class="balance-toggle" id="balanceToggle">👁️</button>
-                    </div>
-                    <div class="balance-amount" id="totalBalance">₽ 0</div>
-                    <div class="balance-change" id="balanceChange">+₽ 0 за месяц</div>
-                </div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { PieChart, Pie, Cell, ResponsiveContainer } = Recharts;
 
-                <!-- Быстрые действия -->
-                <div class="quick-actions">
-                    <button class="quick-action income" id="addIncomeBtn">
-                        <div class="action-icon">💰</div>
-                        <span>Доход</span>
-                    </button>
-                    <button class="quick-action expense" id="addExpenseBtn">
-                        <div class="action-icon">💸</div>
-                        <span>Расход</span>
-                    </button>
-                    <button class="quick-action ai" id="aiAssistantBtn">
-                        <div class="action-icon">🤖</div>
-                        <span>ИИ Совет</span>
-                    </button>
-                </div>
+        // Компонент главного экрана
+        const HomeScreen = () => {
+            const [balance] = useState(32030);
+            const [transactions] = useState([
+                { id: 1, category: 'Еда', amount: 320, description: 'Обед в кафе', type: 'expense', color: 'bg-green-500', icon: '🍽️' },
+                { id: 2, category: 'Транспорт', amount: 600, description: 'Проезд на такси', type: 'expense', color: 'bg-purple-500', icon: '🚇' },
+                { id: 3, category: 'Кошелёк', amount: 11200, description: 'Покупка одежды', type: 'expense', color: 'bg-orange-500', icon: '💳' },
+                { id: 4, category: 'Продукты', amount: 850, description: 'Покупки в магазине', type: 'expense', color: 'bg-blue-500', icon: '🛒' },
+                { id: 5, category: 'Зарплата', amount: 45000, description: 'Зарплата за март', type: 'income', color: 'bg-green-500', icon: '💰' }
+            ]);
 
-                <!-- Секции -->
-                <div class="sections">
-                    <!-- Доходы -->
-                    <div class="section">
-                        <div class="section-header">
-                            <h3>Доходы</h3>
-                            <span class="section-amount" id="incomeAmount">₽ 0</span>
+            return (
+                <div className="p-4 space-y-6">
+                    {/* Баланс */}
+                    <div className="text-center">
+                        <div className="text-3xl font-bold budget-ok-red mb-2">
+                            ₽ {balance.toLocaleString()}
                         </div>
-                        <div class="categories-grid" id="incomeCategories">
-                            <!-- Категории доходов будут загружены динамически -->
-                        </div>
+                        <div className="text-gray-500">Общий баланс</div>
                     </div>
 
-                    <!-- Кошельки -->
-                    <div class="section">
-                        <div class="section-header">
-                            <h3>Кошельки</h3>
-                            <span class="section-amount" id="walletsAmount">₽ 0</span>
+                    {/* ИИ совет */}
+                    <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-xl">
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="text-lg">🧠</span>
+                            <span className="font-medium">ИИ совет:</span>
                         </div>
-                        <div class="wallets-list" id="walletsList">
-                            <!-- Кошельки будут загружены динамически -->
-                        </div>
+                        <div className="text-sm">Сократив расходы на развлечения на 20%, вы сможете сэкономить дополнительно ₽ 3,000.</div>
                     </div>
 
-                    <!-- Расходы -->
-                    <div class="section">
-                        <div class="section-header">
-                            <h3>Расходы</h3>
-                            <span class="section-amount" id="expenseAmount">₽ 0</span>
-                        </div>
-                        <div class="categories-grid" id="expenseCategories">
-                            <!-- Категории расходов будут загружены динамически -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Последние транзакции -->
-                <div class="recent-transactions">
-                    <div class="section-header">
-                        <h3>Последние операции</h3>
-                        <button class="view-all-btn" id="viewAllTransactionsBtn">Все</button>
-                    </div>
-                    <div class="transactions-list" id="recentTransactionsList">
-                        <!-- Последние транзакции будут загружены динамически -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Экран транзакций -->
-            <div id="transactionsScreen" class="screen">
-                <div class="screen-header">
-                    <button class="back-btn" id="backFromTransactions">←</button>
-                    <h2>Все транзакции</h2>
-                    <button class="filter-btn" id="filterBtn">🔍</button>
-                </div>
-                
-                <div class="transactions-filters" id="transactionsFilters">
-                    <div class="filter-tabs">
-                        <button class="filter-tab active" data-filter="all">Все</button>
-                        <button class="filter-tab" data-filter="income">Доходы</button>
-                        <button class="filter-tab" data-filter="expense">Расходы</button>
-                    </div>
-                </div>
-
-                <div class="transactions-list full" id="allTransactionsList">
-                    <!-- Все транзакции будут загружены динамически -->
-                </div>
-            </div>
-
-            <!-- Экран аналитики -->
-            <div id="analyticsScreen" class="screen">
-                <div class="screen-header">
-                    <button class="back-btn" id="backFromAnalytics">←</button>
-                    <h2>Аналитика</h2>
-                    <button class="period-btn" id="periodBtn">Месяц</button>
-                </div>
-
-                <div class="analytics-content">
-                    <!-- Основные метрики -->
-                    <div class="metrics-grid">
-                        <div class="metric-card">
-                            <div class="metric-icon">📈</div>
-                            <div class="metric-info">
-                                <div class="metric-value" id="totalIncomeMetric">₽ 0</div>
-                                <div class="metric-label">Доходы</div>
-                            </div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-icon">📉</div>
-                            <div class="metric-info">
-                                <div class="metric-value" id="totalExpenseMetric">₽ 0</div>
-                                <div class="metric-label">Расходы</div>
-                            </div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-icon">💰</div>
-                            <div class="metric-info">
-                                <div class="metric-value" id="savingsMetric">₽ 0</div>
-                                <div class="metric-label">Сбережения</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Диаграмма расходов -->
-                    <div class="chart-container">
-                        <h3>Распределение расходов</h3>
-                        <canvas id="expenseChart" width="300" height="300"></canvas>
-                    </div>
-
-                    <!-- Топ категории -->
-                    <div class="top-categories">
-                        <h3>Топ категории</h3>
-                        <div class="category-stats" id="categoryStats">
-                            <!-- Статистика категорий будет загружена динамически -->
-                        </div>
-                    </div>
-
-                    <!-- ИИ Инсайты -->
-                    <div class="ai-insights">
-                        <h3>ИИ Анализ</h3>
-                        <div class="insights-list" id="aiInsightsList">
-                            <!-- ИИ инсайты будут загружены динамически -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Экран ИИ-ассистента -->
-            <div id="aiScreen" class="screen">
-                <div class="screen-header">
-                    <button class="back-btn" id="backFromAI">←</button>
-                    <h2>ИИ Ассистент</h2>
-                    <div class="ai-status">🟢 Онлайн</div>
-                </div>
-
-                <div class="ai-content">
-                    <!-- Чат -->
-                    <div class="chat-container" id="chatContainer">
-                        <div class="chat-messages" id="chatMessages">
-                            <div class="ai-message">
-                                <div class="message-avatar">🤖</div>
-                                <div class="message-content">
-                                    <div class="message-text">Привет! Я ваш финансовый ИИ-ассистент. Готов помочь с анализом расходов и финансовыми советами. Что вас интересует?</div>
+                    {/* Список транзакций */}
+                    <div className="space-y-3">
+                        {transactions.map((transaction) => (
+                            <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div className="flex items-center gap-3">
+                                    <div className={`category-icon ${transaction.color}`}>
+                                        {transaction.icon}
+                                    </div>
+                                    <div>
+                                        <div className="font-medium">{transaction.category}</div>
+                                        <div className="text-sm text-gray-500">{transaction.description}</div>
+                                    </div>
+                                </div>
+                                <div className={`font-bold ${transaction.type === 'income' ? 'text-green-500' : 'text-red-500'}`}>
+                                    {transaction.type === 'income' ? '+' : ''}₽ {transaction.amount.toLocaleString()}
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Быстрые вопросы -->
-                    <div class="quick-questions">
-                        <button class="quick-question" data-question="Проанализируй мои расходы за месяц">
-                            📊 Анализ расходов
-                        </button>
-                        <button class="quick-question" data-question="Дай совет по экономии">
-                            💡 Советы по экономии
-                        </button>
-                        <button class="quick-question" data-question="Покажи прогноз бюджета">
-                            🔮 Прогноз бюджета
-                        </button>
-                    </div>
-
-                    <!-- Ввод сообщения -->
-                    <div class="chat-input-container">
-                        <div class="chat-input">
-                            <input type="text" id="chatInput" placeholder="Задайте вопрос ИИ-ассистенту...">
-                            <button class="send-btn" id="sendBtn">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                    <path d="M2 21L23 12L2 3V10L17 12L2 14V21Z" fill="currentColor"/>
-                                </svg>
-                            </button>
-                        </div>
+                        ))}
                     </div>
                 </div>
-            </div>
+            );
+        };
 
-            <!-- Экран добавления транзакции -->
-            <div id="addTransactionScreen" class="screen">
-                <div class="screen-header">
-                    <button class="back-btn" id="backFromAddTransaction">←</button>
-                    <h2 id="addTransactionTitle">Добавить транзакцию</h2>
-                    <button class="save-btn" id="saveTransactionBtn">Сохранить</button>
-                </div>
+        // Компонент экрана добавления
+        const AddScreen = () => {
+            const categories = [
+                { name: 'Кошелёк', amount: '₽ 5,000', color: 'bg-orange-500', icon: '💳' },
+                { name: 'Транспорт', amount: '₽ 1,200', color: 'bg-purple-500', icon: '🚇' },
+                { name: 'Продукты', amount: '₽ 3,400', color: 'bg-blue-500', icon: '🛒' },
+                { name: 'Еда', amount: '₽ 2,100', color: 'bg-green-500', icon: '🍽️' },
+                { name: 'Развлечения', amount: '₽ 800', color: 'bg-red-500', icon: '🎬' },
+                { name: 'Здоровье', amount: '₽ 1,500', color: 'bg-pink-500', icon: '💊' }
+            ];
 
-                <div class="add-transaction-content">
-                    <form id="transactionForm">
-                        <!-- Тип транзакции -->
-                        <div class="transaction-type-tabs">
-                            <button type="button" class="type-tab active" data-type="expense">
-                                <span class="tab-icon">💸</span>
-                                <span>Расход</span>
-                            </button>
-                            <button type="button" class="type-tab" data-type="income">
-                                <span class="tab-icon">💰</span>
-                                <span>Доход</span>
-                            </button>
-                        </div>
+            return (
+                <div className="p-4 space-y-6">
+                    <div className="text-center">
+                        <h2 className="text-2xl font-bold mb-2">Просто</h2>
+                        <p className="text-gray-500">Потянуть монетку и указать сумму</p>
+                    </div>
 
-                        <!-- Сумма -->
-                        <div class="amount-input-container">
-                            <div class="currency-symbol">₽</div>
-                            <input type="number" id="amountInput" class="amount-input" placeholder="0" step="0.01" required>
-                        </div>
-
-                        <!-- Категория -->
-                        <div class="form-group">
-                            <label>Категория</label>
-                            <div class="categories-selector" id="categoriesSelector">
-                                <!-- Категории будут загружены динамически -->
+                    <div className="grid grid-cols-3 gap-4">
+                        {categories.map((category, index) => (
+                            <div key={index} className="text-center">
+                                <div className={`category-icon ${category.color} mx-auto mb-2 cursor-pointer hover:scale-105 transition-transform`}>
+                                    {category.icon}
+                                </div>
+                                <div className="text-sm font-medium">{category.name}</div>
+                                <div className="text-xs text-gray-500">{category.amount}</div>
                             </div>
-                        </div>
+                        ))}
+                    </div>
 
-                        <!-- Кошелек -->
-                        <div class="form-group">
-                            <label>Кошелек</label>
-                            <select id="accountSelect" class="form-select" required>
-                                <!-- Кошельки будут загружены динамически -->
-                            </select>
+                    <div className="bg-blue-50 p-4 rounded-xl">
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="text-lg">🧠</span>
+                            <span className="font-medium text-blue-700">ИИ предлагает:</span>
                         </div>
-
-                        <!-- Описание -->
-                        <div class="form-group">
-                            <label>Описание</label>
-                            <input type="text" id="descriptionInput" class="form-input" placeholder="Описание транзакции">
-                        </div>
-
-                        <!-- Дата -->
-                        <div class="form-group">
-                            <label>Дата</label>
-                            <input type="date" id="dateInput" class="form-input" required>
-                        </div>
-                    </form>
+                        <div className="text-sm text-blue-600">Кафе (на основе геолокации)</div>
+                    </div>
                 </div>
-            </div>
-        </main>
+            );
+        };
 
-        <!-- Нижняя навигация -->
-        <nav class="bottom-nav">
-            <button class="nav-item active" data-screen="home">
-                <div class="nav-icon">🏠</div>
-                <span class="nav-label">Главная</span>
-            </button>
-            <button class="nav-item" data-screen="transactions">
-                <div class="nav-icon">📋</div>
-                <span class="nav-label">Операции</span>
-            </button>
-            <button class="nav-item" data-screen="analytics">
-                <div class="nav-icon">📊</div>
-                <span class="nav-label">Аналитика</span>
-            </button>
-            <button class="nav-item" data-screen="ai">
-                <div class="nav-icon">🤖</div>
-                <span class="nav-label">ИИ</span>
-            </button>
-        </nav>
+        // Компонент аналитики
+        const AnalyticsScreen = () => {
+            const data = [
+                { name: 'Еда', value: 8500, color: '#10B981' },
+                { name: 'Транспорт', value: 3200, color: '#8B5CF6' },
+                { name: 'Развлечения', value: 2800, color: '#EF4444' },
+                { name: 'Продукты', value: 4500, color: '#3B82F6' },
+                { name: 'Здоровье', value: 1800, color: '#EC4899' }
+            ];
 
-        <!-- Модальные окна -->
-        <div id="loadingModal" class="modal">
-            <div class="loading-spinner"></div>
-            <div class="loading-text">Загрузка...</div>
-        </div>
-    </div>
+            return (
+                <div className="p-4 space-y-6">
+                    <div className="text-center">
+                        <h2 className="text-2xl font-bold mb-2">Аналитика</h2>
+                        <p className="text-gray-500">Ваши расходы за месяц</p>
+                    </div>
 
-    <!-- Скрипты -->
-    <script src="src/js/api.js"></script>
-    <script src="src/js/app.js"></script>
+                    <div className="bg-gray-50 p-4 rounded-xl">
+                        <div className="h-64">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={data}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={60}
+                                        outerRadius={100}
+                                        paddingAngle={5}
+                                        dataKey="value"
+                                    >
+                                        {data.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.color} />
+                                        ))}
+                                    </Pie>
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        {data.map((item, index) => (
+                            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-4 h-4 rounded-full" style={{backgroundColor: item.color}}></div>
+                                    <span className="font-medium">{item.name}</span>
+                                </div>
+                                <span className="font-bold text-red-500">₽ {item.value.toLocaleString()}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        // Компонент ИИ-ассистента
+        const AIScreen = () => {
+            const [messages] = useState([
+                { id: 1, text: 'Анализирую ваши расходы за месяц...', sender: 'ai' },
+                { id: 2, text: 'Рекомендую сократить траты на развлечения на 20%', sender: 'ai' },
+                { id: 3, text: 'Вы можете сэкономить ₽ 3,000 в следующем месяце', sender: 'ai' }
+            ]);
+
+            const quickActions = [
+                'Анализ трат',
+                'Прогноз бюджета',
+                'Советы по экономии'
+            ];
+
+            return (
+                <div className="p-4 space-y-6">
+                    <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 rounded-xl">
+                        <h2 className="text-xl font-bold">ИИ Ассистент</h2>
+                        <p className="text-sm opacity-90">Ваш персональный финансовый советник</p>
+                    </div>
+
+                    <div className="space-y-3">
+                        {messages.map((message) => (
+                            <div key={message.id} className="bg-blue-50 p-3 rounded-lg">
+                                <div className="flex items-start gap-2">
+                                    <span className="text-lg">🤖</span>
+                                    <div className="text-sm text-blue-800">{message.text}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="space-y-2">
+                        <p className="text-sm font-medium text-gray-700">Быстрые действия:</p>
+                        <div className="grid grid-cols-1 gap-2">
+                            {quickActions.map((action, index) => (
+                                <button key={index} className="p-3 bg-gray-100 rounded-lg text-left text-sm hover:bg-gray-200 transition-colors">
+                                    {action}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                        <input 
+                            type="text" 
+                            placeholder="Спросите ИИ о финансах..." 
+                            className="w-full bg-transparent border-none outline-none text-sm"
+                        />
+                    </div>
+                </div>
+            );
+        };
+
+        // Компонент настроек
+        const SettingsScreen = () => {
+            const settings = [
+                { icon: '👤', title: 'Профиль', description: 'Личная информация' },
+                { icon: '🔔', title: 'Уведомления', description: 'Настройки оповещений' },
+                { icon: '🔒', title: 'Безопасность', description: 'Пароль и защита' },
+                { icon: '❓', title: 'Помощь', description: 'FAQ и поддержка' }
+            ];
+
+            return (
+                <div className="p-4 space-y-6">
+                    <div className="text-center">
+                        <h2 className="text-2xl font-bold mb-2">Настройки</h2>
+                        <p className="text-gray-500">Управление приложением</p>
+                    </div>
+
+                    <div className="space-y-3">
+                        {settings.map((setting, index) => (
+                            <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                                <span className="text-2xl">{setting.icon}</span>
+                                <div>
+                                    <div className="font-medium">{setting.title}</div>
+                                    <div className="text-sm text-gray-500">{setting.description}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        // Главный компонент приложения
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('home');
+
+            const renderScreen = () => {
+                switch(activeTab) {
+                    case 'home': return <HomeScreen />;
+                    case 'add': return <AddScreen />;
+                    case 'analytics': return <AnalyticsScreen />;
+                    case 'ai': return <AIScreen />;
+                    case 'settings': return <SettingsScreen />;
+                    default: return <HomeScreen />;
+                }
+            };
+
+            return (
+                <div className="mobile-container">
+                    {/* Контент */}
+                    <div className="pb-16">
+                        {renderScreen()}
+                    </div>
+
+                    {/* Нижняя навигация */}
+                    <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-[375px] bg-white border-t border-gray-200">
+                        <div className="flex">
+                            <button 
+                                className={`nav-tab ${activeTab === 'home' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('home')}
+                            >
+                                <div className="text-lg mb-1">🏠</div>
+                                <div>Главная</div>
+                            </button>
+                            <button 
+                                className={`nav-tab ${activeTab === 'analytics' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('analytics')}
+                            >
+                                <div className="text-lg mb-1">📊</div>
+                                <div>Анализ</div>
+                            </button>
+                            <button 
+                                className={`nav-tab ${activeTab === 'add' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('add')}
+                            >
+                                <div className="w-12 h-12 bg-budget-ok-red rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-1">+</div>
+                            </button>
+                            <button 
+                                className={`nav-tab ${activeTab === 'ai' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('ai')}
+                            >
+                                <div className="text-lg mb-1">🧠</div>
+                                <div>ИИ</div>
+                            </button>
+                            <button 
+                                className={`nav-tab ${activeTab === 'settings' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('settings')}
+                            >
+                                <div className="text-lg mb-1">⚙️</div>
+                                <div>Еще</div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Рендер приложения
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
 </body>
 </html>
 
