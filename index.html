@@ -686,24 +686,24 @@
 
         <!-- Нижняя навигация -->
         <div class="bottom-nav">
-            <div class="nav-item active" onclick="showScreen('home')">
+            <div class="nav-item active" onclick="showScreen('home', this)">
                 <i class="fas fa-home"></i>
                 <span>Главная</span>
             </div>
-            <div class="nav-item" onclick="showScreen('analytics')">
+            <div class="nav-item" onclick="showScreen('analytics', this)">
                 <i class="fas fa-chart-pie"></i>
                 <span>Аналитика</span>
             </div>
-            <div class="nav-item" onclick="showScreen('add')">
+            <div class="nav-item" onclick="showScreen('add', this)">
                 <div class="add-button">
                     <i class="fas fa-plus"></i>
                 </div>
             </div>
-            <div class="nav-item" onclick="showScreen('ai')">
+            <div class="nav-item" onclick="showScreen('ai', this)">
                 <i class="fas fa-brain"></i>
                 <span>ИИ</span>
             </div>
-            <div class="nav-item" onclick="showScreen('settings')">
+            <div class="nav-item" onclick="showScreen('settings', this)">
                 <i class="fas fa-cog"></i>
                 <span>Настройки</span>
             </div>
@@ -714,7 +714,7 @@
         let currentAmount = 0;
         let selectedCategory = null;
 
-        function showScreen(screenName) {
+        function showScreen(screenName, element) {
             // Скрыть все экраны
             document.querySelectorAll('.screen').forEach(screen => {
                 screen.classList.remove('active');
@@ -729,7 +729,9 @@
             document.getElementById(screenName + '-screen').classList.add('active');
 
             // Активировать соответствующий элемент навигации
-            event.target.closest('.nav-item').classList.add('active');
+            if (element) {
+                element.closest('.nav-item').classList.add('active');
+            }
         }
 
         function selectCategory(category, amount) {
